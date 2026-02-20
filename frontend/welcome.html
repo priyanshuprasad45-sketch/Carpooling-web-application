@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="welcome.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button id="contactBtn" class="btn">Contact Us</button>
+                <button id="termsBtn" class="btn">Terms</button>
+                <button id="homeBtn" class="btn">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="welcome">
+            <div class="container">
+                <h2 id="welcomeMessage">Welcome!</h2>
+                <p>Enjoy your ride-sharing experience with us.</p>
+                <div class="welcome-options">
+                    <div class="option-card">
+                        <img src="images/user-profile.png" alt="User Profile" class="option-img">
+                        <h3>User Profile</h3>
+                        <p>View and edit your personal details.</p>
+                        <button onclick="goToProfile()" class="btn option-btn">Go to Profile</button>
+                    </div>
+                    <div class="option-card">
+                        <img src="images/publish-ride.png" alt="Publish a Ride" class="option-img">
+                        <h3>Publish a Ride</h3>
+                        <p>Offer a ride to others in your area.</p>
+                        <button onclick="goToPublishRide()" class="btn option-btn">Publish Now</button>
+                    </div>
+                    <div class="option-card">
+                        <img src="images/book-ride.png" alt="Book a Ride" class="option-img">
+                        <h3>Book a Ride</h3>
+                        <p>Find and book a ride that suits you.</p>
+                        <button onclick="goToBookRide()" class="btn option-btn">Book Now</button>
+                    </div>
+                    <div class="option-card">
+                        <img src="images/ride-history.png" alt="Ride History" class="option-img">
+                        <h3>Ride History</h3>
+                        <p>View your past booked and published rides.</p>
+                        <button onclick="goToRideHistory()" class="btn option-btn">View History</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name') || 'User';
+        const email = urlParams.get('email');
+
+        console.log('Welcome page loaded with:', { userName, email });
+
+        if (userName && userName !== 'User') {
+            document.getElementById('welcomeMessage').textContent = `Welcome, ${decodeURIComponent(userName)}!`;
+        } else {
+            document.getElementById('welcomeMessage').textContent = 'Welcome, User!';
+            console.warn('No valid userName provided, defaulting to "User"');
+        }
+
+        if (!email || email === 'null') {
+            console.error('Email not provided or invalid in welcome.html:', window.location.href);
+            setTimeout(() => window.location.href = 'index.html', 2000);
+        }
+
+        function goToProfile() {
+            if (!email || email === 'null') {
+                console.error('No valid email for profile navigation, redirecting to login');
+                window.location.href = 'index.html';
+                return;
+            }
+            console.log('Navigating to profile with:', { userName, email });
+            window.location.href = `profile.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        }
+
+        function goToPublishRide() {
+            if (!email || email === 'null') {
+                console.error('No valid email for publish ride navigation, redirecting to login');
+                window.location.href = 'index.html';
+                return;
+            }
+            console.log('Navigating to publish ride with:', { userName, email });
+            window.location.href = `publish-ride.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        }
+
+        function goToBookRide() {
+            if (!email || email === 'null') {
+                console.error('No valid email for book ride navigation, redirecting to login');
+                window.location.href = 'index.html';
+                return;
+            }
+            console.log('Navigating to book ride with:', { userName, email });
+            window.location.href = `book-ride.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        }
+
+        function goToRideHistory() {
+            if (!email || email === 'null') {
+                console.error('No valid email for ride history navigation, redirecting to login');
+                window.location.href = 'index.html';
+                return;
+            }
+            console.log('Navigating to ride history with:', { userName, email });
+            window.location.href = `history.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        }
+
+        // Navigation for header buttons
+        document.getElementById('contactBtn').onclick = () => window.location.href = `contact.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        document.getElementById('termsBtn').onclick = () => window.location.href = `terms.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        document.getElementById('homeBtn').onclick = () => window.location.href = `index.html`;
+    </script>
+</body>
+</html>

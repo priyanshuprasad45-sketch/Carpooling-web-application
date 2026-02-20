@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information - Admin - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            padding-bottom: 60px;
+        }
+        .users-box {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #ffffffcc;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .users-box h1 {
+            color: #d63031;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #dfe6e9;
+            color: #0984e3;
+        }
+        .error {
+            color: #d63031;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .btn {
+            background-color: #d63031;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .delete-btn {
+            background-color: #dc3545; /* Red for delete */
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button class="btn" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard">
+            <div class="users-box">
+                <h1>User Information</h1>
+                <p id="usersMessage" class="error"></p>
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>License Number</th>
+                            <th>Vehicle Number</th>
+                            <th>Gender</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = 'admin-login.html';
+        }
+
+        async function fetchUsers() {
+            const message = document.getElementById('usersMessage');
+            const tbody = document.getElementById('usersBody');
+
+            message.style.display = 'none';
+            message.textContent = '';
+            tbody.innerHTML = '';
+
+            try {
+                const response = await fetch('http://localhost:3000/admin/users', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                console.log('Users response:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to fetch users');
+                }
+
+                if (data.length === 0) {
+                    message.textContent = 'No users found.';
+                    message.style.display = 'block';
+                } else {
+                    data.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.full_name || 'N/A'}</td>
+                            <td>${user.email || 'N/A'}</td>
+                            <td>${user.phone || 'N/A'}</td>
+                            <td>${user.license_number || 'N/A'}</td>
+                            <td>${user.vehicle_number || 'N/A'}</td>
+                            <td>${user.gender || 'N/A'}</td>
+                            <td><button class="btn delete-btn" onclick="deleteUser('${user.email}')">Delete</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Fetch users error:', error);
+                message.textContent = error.message || 'Failed to fetch users';
+                message.style.display = 'block';
+            }
+        }
+
+        async function deleteUser(email) {
+            if (!confirm(`Are you sure you want to delete user with email ${email}?`)) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/admin/users/${email}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to delete user');
+                }
+
+                alert('User deleted successfully');
+                fetchUsers(); // Refresh table
+            } catch (error) {
+                console.error('Delete user error:', error);
+                document.getElementById('usersMessage').textContent = error.message || 'Failed to delete user';
+                document.getElementById('usersMessage').style.display = 'block';
+            }
+        }
+
+        window.onload = fetchUsers;
+    </script>
+</body>
+</html>

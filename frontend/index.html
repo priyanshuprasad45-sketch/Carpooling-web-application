@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Ride Together - Smart Ride-Sharing</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button id="contactBtn" class="btn">Contact Us</button>
+                <button id="termsBtn" class="btn">Terms</button>
+                <button id="adminBtn"  class="btn"> Admin Login</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>A Smart Ride-Sharing Solution</h2>
+            </div>
+        </section>
+
+        <section class="intro">
+            <div class="container">
+                <h2>Introduction</h2>
+                <div class="intro-content">
+                    <div class="intro-text">
+                        <p>Our Ride Together is a web-based platform connecting drivers and passengers for shared rides. It aims to:</p>
+                        <ul>
+                            <li>Reduce travel costs</li>
+                            <li>Decrease traffic congestion</li>
+                            <li>Lower environmental impact</li>
+                            <li>Provide secure booking and user registration</li>
+                        </ul>
+                    </div>
+                    <img src="images/first.jpg" alt="Ride-sharing concept" class="intro-img">
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <h2>Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <img src="images/registration.jpg" alt="User Registration" class="feature-img">
+                        <h3>User Registration</h3>
+                        <p>Secure login/signup system</p>
+                    </div>
+                    <div class="feature-card">
+                        <img src="images/management.jpg" alt="Ride Management" class="feature-img">
+                        <h3>Ride Management</h3>
+                        <p>Offer, search, and book rides</p>
+                    </div>
+                    <div class="feature-card">
+                        <img src="images/booking.jpg" alt="Booking System" class="feature-img">
+                        <h3>Booking System</h3>
+                        <p>Confirmation and notifications</p>
+                    </div>
+                    <div class="feature-card">
+                        <img src="images/profile.jpg" alt="User Profiles" class="feature-img">
+                        <h3>User Profiles</h3>
+                        <p>Ride history and vehicle details</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="goals">
+            <div class="container">
+                <h2>Project Goals</h2>
+                <div class="goals-grid">
+                    <div class="goal-card">
+                        <img src="images/cost.jpg" alt="Cost Effective" class="goal-img">
+                        <h3>Cost Effective</h3>
+                        <p>Reduce travel expenses with no platform fees</p>
+                    </div>
+                    <div class="goal-card">
+                        <img src="images/cost.jpg" alt="Eco-Friendly" class="goal-img">
+                        <h3>Eco-Friendly</h3>
+                        <p>Lower carbon footprint</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard">
+            <div class="container">
+                <div class="dashboard-box">
+                    <div class="slider-container">
+                        <div class="slider">
+                            <!-- Login Slide -->
+                            <div class="slide login-slide active">
+                                <h2>Login</h2>
+                                <form id="loginForm">
+                                    <input type="email" id="loginEmail" placeholder="Email" required>
+                                    <input type="password" id="loginPassword" placeholder="Password" required>
+                                    <button type="submit" class="btn">Sign In</button>
+                                    <p id="loginMessage"></p>
+                                </form>
+                                <p>Need an account? <span class="switch" data-target="register">Register here</span></p>
+                            </div>
+                            <!-- Register Slide -->
+                            <div class="slide register-slide">
+                                <h2>Register</h2>
+                                <form id="registerForm">
+                                    <input type="text" id="regFullName" placeholder="Full Name" required>
+                                    <input type="email" id="regEmail" placeholder="Email" required>
+                                    <input type="tel" id="regPhone" placeholder="Mobile Number" required>
+                                    <input type="password" id="regPassword" placeholder="Password" required>
+                                    <button type="submit" class="btn">Sign Up</button>
+                                    <p id="regMessage"></p>
+                                </form>
+                                <p>Have an account? <span class="switch" data-target="login">Login here</span></p>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

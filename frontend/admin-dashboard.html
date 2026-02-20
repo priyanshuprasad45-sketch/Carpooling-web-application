@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ensure body has enough height to show footer */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1; /* Pushes footer to bottom */
+            padding-bottom: 60px; /* Space for footer */
+        }
+        .dashboard-box {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #ffffffcc; /* Semi-transparent white */
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .dashboard-box h1 {
+            color: #d63031; /* Matches intro h2 color */
+            margin-bottom: 1.5rem;
+        }
+        .dashboard-box p {
+            color: #2d3436; /* Matches intro text */
+            margin-bottom: 2rem;
+        }
+        .dashboard-box .btn {
+            display: inline-block;
+            margin: 0.5rem;
+            background-color: #d63031; /* Matches .btn in styles.css */
+        }
+        .dashboard-box .btn:hover {
+            transform: scale(1.05); /* Matches .btn:hover in styles.css */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button class="btn" onclick="logout()">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard">
+            <div class="dashboard-box">
+                <h1>Welcome, Admin!</h1>
+                <p>Manage the platform from here.</p>
+                <button class="btn" onclick="window.location.href='users.html'">User Information</button>
+                <button class="btn" onclick="window.location.href='upcoming-rides.html'">Upcoming Rides</button>
+                <button class="btn" onclick="window.location.href='previous-rides.html'">Previous Rides</button>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = 'admin-login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Optional: Add header scroll effect if desired
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

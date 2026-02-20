@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Rides - Admin - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        main {
+            flex: 1;
+            padding-bottom: 60px;
+        }
+        .rides-box {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #ffffffcc;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .rides-box h1 {
+            color: #d63031;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #dfe6e9;
+            color: #0984e3;
+        }
+        .error {
+            color: #d63031;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .btn {
+            background-color: #d63031;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .details-btn {
+            background-color: #007bff; /* Blue for details */
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+        .details-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .filter-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .filter-box input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .filter-box .btn {
+            padding: 10px;
+        }
+        .rider-details {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button class="btn" onclick="window.location.href='admin-dashboard.html'">Back to Dashboard</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard">
+            <div class="rides-box">
+                <h1>Upcoming Rides (Next 7 Days)</h1>
+                <div class="filter-box">
+                    <input type="date" id="dateFilter" placeholder="Select Date">
+                    <input type="email" id="emailFilter" placeholder="Enter User Email">
+                    <button class="btn" onclick="fetchUpcomingRides()">Filter</button>
+                    <button class="btn" onclick="resetFilters()">Reset</button>
+                </div>
+                <p id="upcomingMessage" class="error"></p>
+                <table id="upcomingTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Driver</th>
+                            <th>Starting Point</th>
+                            <th>Destination</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Seats</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upcomingBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = 'admin-login.html';
+        }
+
+        async function fetchUpcomingRides() {
+            const message = document.getElementById('upcomingMessage');
+            const tbody = document.getElementById('upcomingBody');
+            const dateFilter = document.getElementById('dateFilter').value;
+            const emailFilter = document.getElementById('emailFilter').value;
+
+            message.style.display = 'none';
+            message.textContent = '';
+            tbody.innerHTML = '';
+
+            let url = 'http://localhost:3000/admin/upcoming-rides';
+            const params = new URLSearchParams();
+            if (dateFilter) params.append('date', dateFilter);
+            if (emailFilter) params.append('email', emailFilter);
+            if (params.toString()) url += `?${params.toString()}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const rides = await response.json();
+
+                console.log('Upcoming rides response:', rides);
+
+                if (!response.ok) {
+                    throw new Error(rides.message || 'Failed to fetch upcoming rides');
+                }
+
+                if (rides.length === 0) {
+                    message.textContent = 'No upcoming rides found.';
+                    message.style.display = 'block';
+                } else {
+                    rides.forEach(ride => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${ride.id}</td>
+                            <td>${ride.driver_name || 'N/A'}</td>
+                            <td>${ride.starting_point}</td>
+                            <td>${ride.destination}</td>
+                            <td>${ride.date}</td>
+                            <td>${ride.time}</td>
+                            <td>${ride.available_seats}</td>
+                            <td>${ride.price}</td>
+                            <td><button class="btn details-btn" onclick="showRideDetails(${ride.id}, this)">Details</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            } catch (error) {
+                console.error('Fetch upcoming rides error:', error);
+                message.textContent = error.message || 'Failed to fetch upcoming rides';
+                message.style.display = 'block';
+            }
+        }
+
+        async function showRideDetails(rideId, button) {
+            const existingDetails = button.parentElement.querySelector('.rider-details');
+            if (existingDetails) {
+                existingDetails.style.display = existingDetails.style.display === 'none' ? 'block' : 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/admin/rides/${rideId}/riders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                console.log('Rider details response:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to fetch rider details');
+                }
+
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'rider-details';
+                if (data.length === 0) {
+                    detailsDiv.textContent = 'No riders booked for this ride.';
+                } else {
+                    detailsDiv.innerHTML = '<strong>Riders:</strong><ul>' +
+                        data.map(rider => `<li>${rider.full_name} (${rider.email})</li>`).join('') +
+                        '</ul>';
+                }
+                button.parentElement.appendChild(detailsDiv);
+            } catch (error) {
+                console.error('Fetch rider details error:', error);
+                alert(error.message || 'Failed to fetch rider details');
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('emailFilter').value = '';
+            fetchUpcomingRides();
+        }
+
+        window.onload = fetchUpcomingRides;
+    </script>
+</body>
+</html>

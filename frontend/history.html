@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ride History - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .history-section {
+            padding: 4rem 0;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .history-section h2 {
+            color: #0984e3;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .history-card {
+            background-color: #dfe6e9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .history-card h3 {
+            color: #0984e3;
+            margin-bottom: 1rem;
+        }
+        .ride-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .ride-item {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        .ride-item:last-child {
+            border-bottom: none;
+        }
+        .booking-details {
+            margin-top: 5px;
+            padding-left: 15px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button id="backToWelcomeBtn" class="btn">Back to Welcome</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="history-section">
+            <div class="container">
+                <h2>Ride History</h2>
+                <div class="history-grid">
+                    <div class="history-card">
+                        <h3>My Earlier Booked Rides</h3>
+                        <div id="pastBookedRides" class="ride-list">
+                            <p>Loading past booked rides...</p>
+                        </div>
+                    </div>
+                    <div class="history-card">
+                        <h3>My Earlier Published Rides</h3>
+                        <div id="pastPublishedRides" class="ride-list">
+                            <p>Loading past published rides...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name') || 'User';
+        const email = urlParams.get('email');
+
+        console.log('History page loaded with:', { userName, email });
+
+        function initializePage() {
+            if (!email || email === 'null') {
+                console.error('Email not provided or invalid in history.html:', window.location.href);
+                alert('No valid email provided. Redirecting to login...');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+                return;
+            }
+
+            const backBtn = document.getElementById('backToWelcomeBtn');
+            backBtn.addEventListener('click', () => {
+                console.log('Navigating back to welcome with:', { userName, email });
+                window.location.href = `welcome.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+            });
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                const bookedList = document.getElementById('pastBookedRides');
+                const publishedList = document.getElementById('pastPublishedRides');
+
+                if (!bookedList || !publishedList) {
+                    console.warn('Ride list elements not found in DOM.');
+                    return;
+                }
+
+                // Load past booked rides
+                try {
+                    console.log('Fetching past booked rides for:', email);
+                    const bookedResponse = await fetch(`http://localhost:3000/past-booked-rides?email=${encodeURIComponent(email)}`, { cache: 'no-store' });
+                    if (!bookedResponse.ok) {
+                        const errorText = await bookedResponse.text();
+                        throw new Error(`Failed to fetch past booked rides: ${bookedResponse.status} - ${errorText}`);
+                    }
+                    const bookedRides = await bookedResponse.json();
+                    console.log('Past booked rides:', bookedRides);
+
+                    bookedList.innerHTML = '';
+                    if (bookedRides.length === 0) {
+                        bookedList.innerHTML = '<p>No past booked rides.</p>';
+                    } else {
+                        bookedRides.forEach(ride => {
+                            const rideItem = document.createElement('div');
+                            rideItem.className = 'ride-item';
+                            rideItem.innerHTML = `
+                                <strong>${ride.starting_point} to ${ride.destination}</strong><br>
+                                Date: ${ride.date} | Time: ${ride.time} | Seats: ${ride.seats_requested}<br>
+                                Driver: ${ride.driver_name} | Status: ${ride.status}<br>
+                                Driver Phone: ${ride.driver_phone} | Vehicle: ${ride.driver_vehicle_number}
+                            `;
+                            bookedList.appendChild(rideItem);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching past booked rides:', error);
+                    bookedList.innerHTML = `<p>Error: ${error.message}</p>`;
+                }
+
+                // Load past published rides
+                try {
+                    console.log('Fetching past published rides for:', email);
+                    const publishedResponse = await fetch(`http://localhost:3000/past-published-rides?email=${encodeURIComponent(email)}`, { cache: 'no-store' });
+                    if (!publishedResponse.ok) {
+                        const errorText = await publishedResponse.text();
+                        throw new Error(`Failed to fetch past published rides: ${publishedResponse.status} - ${errorText}`);
+                    }
+                    const publishedRides = await publishedResponse.json();
+                    console.log('Past published rides:', publishedRides);
+
+                    publishedList.innerHTML = '';
+                    if (publishedRides.length === 0) {
+                        publishedList.innerHTML = '<p>No past published rides.</p>';
+                    } else {
+                        publishedRides.forEach(ride => {
+                            const rideItem = document.createElement('div');
+                            rideItem.className = 'ride-item';
+                            let bookingsHTML = '';
+                            if (ride.bookings && ride.bookings.length > 0) {
+                                bookingsHTML = '<div class="booking-details">Bookings:<br>';
+                                ride.bookings.forEach(booking => {
+                                    bookingsHTML += `
+                                        - Rider: ${booking.rider_name} | Phone: ${booking.rider_phone} | Seats: ${booking.seats_requested} | Status: ${booking.status}<br>
+                                    `;
+                                });
+                                bookingsHTML += '</div>';
+                            } else {
+                                bookingsHTML = '<div class="booking-details">No bookings for this ride.</div>';
+                            }
+                            rideItem.innerHTML = `
+                                <strong>${ride.starting_point} to ${ride.destination}</strong><br>
+                                Date: ${ride.date} | Time: ${ride.time} | Seats Offered: ${ride.available_seats}<br>
+                                ${bookingsHTML}
+                            `;
+                            publishedList.appendChild(rideItem);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error fetching past published rides:', error);
+                    publishedList.innerHTML = `<p>Error: ${error.message}</p>`;
+                }
+            });
+        }
+
+        initializePage();
+    </script>
+</body>
+</html>

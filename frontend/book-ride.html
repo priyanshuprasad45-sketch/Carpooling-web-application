@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Ride - Our Ride Together</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .ride-list {
+            margin-top: 10px;
+        }
+        .ride-item {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            position: relative;
+        }
+        .ride-item button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        .search-bar select {
+            width: 40%;
+            padding: 8px;
+            margin-right: 10px;
+        }
+        .search-bar button {
+            padding: 8px 15px;
+        }
+        .ride-details-extra {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+        .filter-bar {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .filter-bar label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .filter-bar input, .filter-bar select {
+            padding: 5px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header id="main-header">
+        <div class="container">
+            <h1>Our Ride Together</h1>
+            <nav>
+                <button onclick="goToProfile()" class="btn">Profile</button>
+                <button id="welcomeBtn" class="btn">Back to Welcome</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="book-ride">
+            <div class="container">
+                <h2>Book a Ride</h2>
+                <div class="search-bar">
+                    <select id="searchFrom">
+                        <option value="">Select Pickup Location</option>
+                    </select>
+                    <select id="searchTo">
+                        <option value="">Select Destination</option>
+                    </select>
+                    <button onclick="searchRides()" class="btn">Search</button>
+                </div>
+                <div class="filter-bar">
+                    <label for="minPrice">Min Price (₹):</label>
+                    <input type="number" id="minPrice" min="0" step="0.01" placeholder="0">
+                    <label for="maxPrice">Max Price (₹):</label>
+                    <input type="number" id="maxPrice" min="0" step="0.01" placeholder="∞">
+                    <label for="filterAC">AC:</label>
+                    <select id="filterAC">
+                        <option value="">Any</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <label for="filterPets">Pets Allowed:</label>
+                    <select id="filterPets">
+                        <option value="">Any</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <label for="filterDate">Date:</label>
+                    <input type="date" id="filterDate">
+                    <button onclick="searchRides()" class="btn">Apply Filters</button>
+                </div>
+                <div id="rideResults" class="ride-list">
+                    <p>Loading available rides...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Our Ride Together. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name') || 'User';
+        const email = urlParams.get('email') || null;
+
+        console.log('Book a Ride page loaded with:', { userName, email });
+
+        if (!email || email === 'null') {
+            console.error('No valid email, redirecting to login');
+            window.location.href = 'index.html';
+        }
+
+        async function loadLocationSuggestionsAndRides() {
+            console.log('Fetching all rides for dropdowns and display');
+            try {
+                const response = await fetch(`http://localhost:3000/all-rides`, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Failed to fetch rides: ${response.status} - ${await response.text()}`);
+                const rides = await response.json();
+                console.log('All rides fetched:', rides);
+                populateDropdownsAndDisplay(rides);
+            } catch (error) {
+                console.error('Error fetching rides:', error);
+                document.getElementById('rideResults').innerHTML = `<p>Error loading rides: ${error.message}</p>`;
+            }
+        }
+
+        function populateDropdownsAndDisplay(rides) {
+            const availableRides = rides.filter(ride => ride.driver_email !== email);
+            const fromSelect = document.getElementById('searchFrom');
+            const toSelect = document.getElementById('searchTo');
+            fromSelect.innerHTML = '<option value="">Select Pickup Location</option>';
+            toSelect.innerHTML = '<option value="">Select Destination</option>';
+
+            const uniqueStartingPoints = [...new Set(availableRides.map(ride => ride.starting_point))];
+            const uniqueDestinations = [...new Set(availableRides.map(ride => ride.destination))];
+
+            uniqueStartingPoints.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                fromSelect.appendChild(option);
+            });
+
+            uniqueDestinations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                toSelect.appendChild(option);
+            });
+
+            applyFiltersAndDisplay(availableRides);
+        }
+
+        function displayRides(rides) {
+            const rideList = document.getElementById('rideResults');
+            rideList.innerHTML = '';
+            if (rides.length === 0) {
+                rideList.innerHTML = '<p>No rides available with seats at the moment.</p>';
+            } else {
+                rides.forEach(ride => {
+                    console.log('Displaying ride date (raw):', ride.date);
+                    const rideItem = document.createElement('div');
+                    rideItem.className = 'ride-item';
+                    rideItem.innerHTML = `
+                        <div class="ride-details">
+                            <strong>${ride.starting_point} to ${ride.destination}</strong><br>
+                            Date: ${ride.date} | Time: ${ride.time} | Seats Available: ${ride.remaining_seats} | Driver: ${ride.driver_name}<br>
+                            Price: ₹${ride.price} | AC: ${ride.ac === 'yes' ? 'Yes' : 'No'} | Pets Allowed: ${ride.pets_allowed === 'yes' ? 'Yes' : 'No'}
+                            <div class="ride-details-extra">
+                                Phone: ${ride.phone} | Gender: ${ride.gender || 'Not specified'}
+                            </div>
+                        </div>
+                        <button onclick="bookRide(${ride.id}, ${ride.remaining_seats})">Book</button>
+                    `;
+                    rideList.appendChild(rideItem);
+                    console.log('Rendered ride date:', rideItem.querySelector('.ride-details').innerHTML);
+                });
+            }
+        }
+
+        function applyFiltersAndDisplay(rides) {
+            const from = document.getElementById('searchFrom').value.trim().toLowerCase();
+            const to = document.getElementById('searchTo').value.trim().toLowerCase();
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const filterAC = document.getElementById('filterAC').value;
+            const filterPets = document.getElementById('filterPets').value;
+            const filterDate = document.getElementById('filterDate').value;
+
+            const filteredRides = rides.filter(ride => 
+                ride.driver_email !== email &&
+                (!from || ride.starting_point.toLowerCase() === from) &&
+                (!to || ride.destination.toLowerCase() === to) &&
+                (!minPrice || ride.price >= parseFloat(minPrice)) &&
+                (!maxPrice || ride.price <= parseFloat(maxPrice)) &&
+                (!filterAC || ride.ac === filterAC) &&
+                (!filterPets || ride.pets_allowed === filterPets) &&
+                (!filterDate || ride.date === filterDate)
+            );
+            console.log('Filtered rides after update:', filteredRides);
+            displayRides(filteredRides);
+        }
+
+        async function searchRides() {
+            const from = document.getElementById('searchFrom').value.trim().toLowerCase();
+            const to = document.getElementById('searchTo').value.trim().toLowerCase();
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const filterAC = document.getElementById('filterAC').value;
+            const filterPets = document.getElementById('filterPets').value;
+            const filterDate = document.getElementById('filterDate').value;
+
+            console.log('Searching rides with:', { from, to, minPrice, maxPrice, filterAC, filterPets, filterDate });
+
+            const rideList = document.getElementById('rideResults');
+            rideList.innerHTML = '<p>Loading rides...</p>';
+
+            try {
+                const response = await fetch(`http://localhost:3000/all-rides`, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`Failed to fetch rides: ${response.status} - ${await response.text()}`);
+                const rides = await response.json();
+                console.log('All rides fetched:', rides);
+                applyFiltersAndDisplay(rides);
+            } catch (error) {
+                console.error('Error searching rides:', error);
+                rideList.innerHTML = `<p>Error loading rides: ${error.message}</p>`;
+            }
+        }
+
+        async function bookRide(rideId, remainingSeats) {
+            console.log('Booking ride ID:', rideId);
+            const seatsRequested = prompt(`How many seats would you like to book? (Max ${remainingSeats})`, '1');
+            if (!seatsRequested || isNaN(seatsRequested) || seatsRequested <= 0 || seatsRequested > remainingSeats) {
+                alert(`Please enter a valid number of seats (1 to ${remainingSeats}).`);
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/book-ride`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rideId, email, seatsRequested: parseInt(seatsRequested) })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to book ride: ${response.status} - ${errorData.message}`);
+                }
+                const data = await response.json();
+                console.log('Book ride response:', data);
+                alert(data.message);
+                // Manually refresh the ride list since Socket.IO is removed
+                loadLocationSuggestionsAndRides();
+            } catch (error) {
+                console.error('Error booking ride:', error);
+                alert('Error booking ride: ' + error.message);
+                if (error.message.includes('Mobile number')) {
+                    alert('Please update your mobile number in your profile.');
+                    goToProfile();
+                }
+            }
+        }
+
+        function goToProfile() {
+            console.log('Navigating back to profile with:', { userName, email });
+            window.location.href = `profile.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        }
+
+        document.getElementById('welcomeBtn').onclick = () => {
+            if (!email || email === 'null') {
+                console.error('No valid email for welcome navigation, redirecting to login');
+                window.location.href = 'index.html';
+                return;
+            }
+            console.log('Returning to welcome with:', { userName, email });
+            window.location.href = `welcome.html?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(email)}`;
+        };
+
+        // Initial load
+        loadLocationSuggestionsAndRides();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d2d3a43807d9c5',t:'MTc0NDEyNjQ0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
